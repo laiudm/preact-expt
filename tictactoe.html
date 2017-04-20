@@ -1,0 +1,123 @@
+<html>
+<head>
+<link rel="stylesheet" href="tictactoe.css">
+<script type="text/javascript" src="preact.js"> </script>
+</head>
+<body>
+<div id="errors" style="
+  background: #c00;
+  color: #fff;
+  display: none;
+  margin: -20px -20px 20px;
+  padding: 20px;
+  white-space: pre-wrap;
+"></div>
+<script>
+window.onerror = function(message, source, line, col, error) {
+  var text = error ? error.stack || error : message + ' (at ' + source + ':' + line + ':' + col + ')';
+  errors.textContent += text + '\n';
+  errors.style.display = '';
+};
+console.error = (function(old) {
+  return function error() {
+    errors.textContent += Array.prototype.slice.call(arguments).join(' ') + '\n';
+    errors.style.display = '';
+    old.apply(this, arguments);
+  }
+})(console.error);
+</script>
+
+<h1>Tic Tac Toe v0.12 </h1>
+<script>
+
+let {h, render, Component} = preact;
+
+class Square extends Component {
+	constructor() {
+		super();
+		this.state = {
+			value: null,
+		};
+	}
+	
+	render() {
+		var mythis = this;
+		return h('button', {className: 'square', 
+			onclick: function onClick() { mythis.setState({value: 'X'})} }, 
+			this.state.value);
+		//return h('button', {className: 'square', onclick: {() => alert('click')} }, this.state.value);
+	}
+}
+
+class Board extends Component {
+	renderSquare(i) {
+		return h(Square, {value: i});
+	}
+	
+	render() {
+		const status = 'Next player: X';
+		return h('div', null,
+			h('div', {className: 'status'}, status),
+			h('div', {className: 'board-row'}, 
+				this.renderSquare(0),
+				this.renderSquare(1),
+				this.renderSquare(2)
+			),
+			h('div', {className: 'board-row'}, 
+				this.renderSquare(3),
+				this.renderSquare(4),
+				this.renderSquare(5)
+			),
+			h('div', {className: 'board-row'}, 
+				this.renderSquare(6),
+				this.renderSquare(7),
+				this.renderSquare(8)
+			)
+		)
+	}
+}
+
+class Game extends Component {
+
+	render() {
+		return h('div', {className: 'game'},
+			h('div', {className: 'game-board'}, h(Board) ),
+			h('div', {className: 'game-info'},
+				h('div', null, '/* status */'),
+				h('div', null, '/* to do */')
+			)
+		)
+	}
+}
+	
+class Clock extends Component {
+    constructor() {
+        super();
+        // set initial time:
+        this.state.time = Date.now();
+        this.timer = setInterval(() => {
+            this.setState({ time: Date.now() });
+        }, 1000);		
+    }
+
+    render(props, state) {
+        let time = new Date(state.time).toLocaleTimeString();
+        //return h("span", null, time);
+		//return h("div", null, time);
+		return h('div', null, 
+			h('div', null, 'before'), 
+			h('span', null, time), 
+			h('div', {className: 'game'}, 'after'), 
+			h(Game)
+		);
+		
+    }
+}
+
+// render an instance of Clock into <body>:
+render(h(Clock, null), document.body);
+
+</script>
+
+</body>
+</html>

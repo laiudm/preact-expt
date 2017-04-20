@@ -1,0 +1,33 @@
+<html>
+<head>
+<script type="text/javascript" src="preact.js"> </script>
+</head>
+<body>
+<h1>Heading - Preact Clock v3</h1>
+<script>
+
+let {h, render, Component} = preact;
+	
+class Clock extends Component {
+    constructor() {
+        super();
+        // set initial time:
+        this.state.time = Date.now();
+        this.timer = setInterval(() => {
+            this.setState({ time: Date.now() });
+        }, 1000);		
+    }
+
+    render(props, state) {
+        let time = new Date(state.time).toLocaleTimeString();
+        return h("span", null, time);
+    }
+}
+
+// render an instance of Clock into <body>:
+render(h(Clock, null), document.body);
+
+</script>
+
+</body>
+</html>
