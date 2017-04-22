@@ -1,0 +1,240 @@
+<html>
+<head>
+<link rel="stylesheet" href="preact-markup.css">
+<script type="text/javascript" src="preact.js"> </script>
+<script type="text/javascript" src="markup.js"> </script>
+<script type="text/javascript" src="linkstate.js"> </script> 
+</head>
+<body>
+<div id="errors" style="
+  background: #c00;
+  color: #fff;
+  display: none;
+  margin: -20px -20px 20px;
+  padding: 20px;
+  white-space: pre-wrap;
+"></div>
+<script>
+window.onerror = function(message, source, line, col, error) {
+  var text = error ? error.stack || error : message + ' (at ' + source + ':' + line + ':' + col + ')';
+  errors.textContent += text + '\n';
+  errors.style.display = '';
+};
+console.error = (function(old) {
+  return function error() {
+    errors.textContent += Array.prototype.slice.call(arguments).join(' ') + '\n';
+    errors.style.display = '';
+    old.apply(this, arguments);
+  }
+})(console.error);
+</script>
+
+
+<h1>Preact Markup </h1>
+<script>
+
+let {h, render, Component} = preact;
+const Markup = preactMarkup;
+
+//Used http://codepen.io/ to convert from SCCS to CSS (took ages to find & fix this)
+
+// Demo: textarea on the left, <Markup> on the right. Renders on change.
+class App extends Component {
+	constructor () {
+		super();
+		
+		// click on the error button to show the error
+		this.showError = () => {
+			alert(this.state.error);
+			//this.setState({error: false});	// simple way to clear
+		};
+	}
+	
+	componentDidMount() {
+		this.loadExample();
+	}
+
+	// loads HTML example from a Gist
+	loadExample() {
+		fetch('https://gist.githubusercontent.com/developit/2c6aa8e40bd3ab251968/raw/c470e7e82fcc3eaeea1e3bc26d0829b7592ebb06/example.html')
+			.then( r => r.text() )
+			.then( markup => this.setState({ type:'html', markup }) );
+	}
+	
+	// clear error on success (<Markup> fires no event for success)
+	componentWillUpdate({ }, { markup, type }) {
+		if (markup!==this.lastMarkup || type!==this.lastType) {
+			//this.state.error = null;
+			this.lastMarkup = markup;
+			this.lastType = type;
+			this.setState({error: false});
+		}
+	}
+
+	render({ }, { markup, type, error }) {
+		// components to use as custom elements:
+		let components = {
+			Sidebar,
+			Toolbar,
+			WidgetA,
+			OtherWidget
+		};
+
+		return (
+			h('div', {id: "app"}, 
+				h('div', {className: "editor"},
+					// put toolbar here 
+					h('div', {className: "toolbar"}, 
+						h('button', {onClick: this.loadExample}, "Load Example Gist"),
+						h('select', {value: type, onChange: this.linkState('type')},
+							h('option', {value: "xml"}, "XML"),
+							h('option', {value: "html"}, "HTML5")
+						),
+						(error ? h('button', {onClick: this.showError}, "Error") : null)
+					),
+					h('textarea', {value: markup, onInput: this.linkState('markup')})),
+				h('div', {className: 'preview'},
+					// put Markup here
+					h(Markup, {type: type, markup: markup, components: components, onError: this.linkState("error", "error")})
+				)
+			)
+		);
+	}
+}
+
+		
+		/*
+			<div id="app">
+				<div class="editor">
+					<div class="toolbar">
+						<button onClick={this.loadExample}>Load Example Gist</button>
+						<select value={type} onChange={this.linkState('type')}>
+							<option value="xml">XML (Strict)</option>
+							<option value="html">HTML5</option>
+						</select>
+						{ error ? (
+							<button onClick={this.showError}>Error</button>
+						) : null }
+					</div>
+
+					<textarea value={markup} onInput={this.linkState('markup')} />
+				</div>
+
+				<div class="preview">
+					<Markup
+						type={type}
+						markup={markup}
+						components={components}
+						onError={this.linkState('error', 'error')} />
+				</div>
+			</div>
+		);
+		
+		*/
+
+/* 
+
+*/
+
+function _objectWithoutProperties(obj, keys) { 
+	var target = {}; 
+	for (var i in obj) { 
+		if (keys.indexOf(i) >= 0) 
+			continue; 
+		if (!Object.prototype.hasOwnProperty.call(obj, i))
+			continue; 
+		target[i] = obj[i]; 
+	} 
+	return target; 
+}
+
+var _extends = Object.assign || function (target) { 
+	for (var i = 1; i < arguments.length; i++) { 
+		var source = arguments[i]; 
+		for (var key in source) { 
+			if (Object.prototype.hasOwnProperty.call(source, key)) { 
+				target[key] = source[key]; 
+			} 
+		} 
+	} 
+	return target; 
+};
+
+
+// creates a dummy component that just
+// shows its name and some debug info:
+function createPlaceholderComponent (name) {
+
+	return function(_props) {
+		let children = _props.children;
+		let props = _objectWithoutProperties( _props, ["children"]);
+		return (
+			 h('div', _extends({className: "placeholder-component" , "data-component": name }, props),
+				h('h4', null, name) ,
+				h('pre', null, JSON.stringify(props,null,'  ')),
+				h('button', {onClick: () => console.log(props)},"Log Props"),
+				children.length ? h('div', {className: "inner"}, children) : null
+			)
+		);
+	}
+
+}
+
+/*
+	<div class="placeholder-component" data-component={name} {...props}>
+		<h4>{ name }</h4>
+		<pre>{ JSON.stringify(props,null,'  ') }</pre>
+		<button onClick={ () => console.log(props) }>Log Props</button>
+		{ children.length ? (<div class="inner">{children}</div>) : null }
+	</div>
+*/
+
+const WidgetA = createPlaceholderComponent('WidgetA');
+const OtherWidget = createPlaceholderComponent('OtherWidget');
+
+
+
+// A <Toolbar /> component, to show that
+// Stateless Functional Components work too
+function  Toolbar(_props) {
+	let children = _props.children;
+	let props = _objectWithoutProperties( _props, ["children"]);
+	return h('header', _extends({className: "toolbar" }, props), children);
+}
+	
+	// <header class="toolbar" {...props}>{ children }</header>
+
+
+
+// A silly <Sidebar /> component
+class Sidebar extends Component {
+	componentWillMount() {
+		let mounts = (this.state.mounts || 0)+1;
+		this.setState({ mounts });
+	}
+	render(_props, { mounts }) {
+		let children = _props.children;
+		let props = _objectWithoutProperties( _props, ["children"]);
+		return (
+			h('aside', _extends({className: "sidebar"} , props),
+				h('span', null, "Mounts: " + mounts),
+				children
+			)
+		);
+	}
+}
+				/*
+			<aside class="sidebar" {...props}>
+				<span>Mounts: {mounts}</span>
+				{ children }
+			</aside>
+				*/
+
+
+
+render(h(App, null), document.body);		
+
+</script>
+
+</body>
+</html>

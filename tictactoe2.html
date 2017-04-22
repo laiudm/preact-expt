@@ -48,10 +48,11 @@ function stackTrace() {
 
 class Square extends Component {
 	
-	render() {
+	render({value, onClick}) {
+		/* if (value == 'X' || value == 'O')*/ //console.log("Square render " + value);
 		return h('button', {className: 'square', 
-			onclick: () => this.props.onClick() }, 
-			this.props.value);
+			onclick: () => onClick() }, 
+			value);
 	}
 }
 
@@ -227,7 +228,7 @@ class Incrementer extends Component {
 class TodoApp extends Component {
   constructor(props) {
     super(props);
-    this.handleChange = this.handleChange.bind(this);
+    this.handleChange = this.handleChange.bind(this);	// ensures this can be used in the call
     this.handleSubmit = this.handleSubmit.bind(this);
     this.state = {items: [], text: ''};
   }
@@ -265,9 +266,9 @@ class TodoApp extends Component {
 }
 
 class TodoList extends Component {
-  render(props, state) {
+  render({items}) {
     return (
-		h('ul', null, props.items.map( item => (
+		h('ul', null, items.map( item => (
 			h('li', {key: item.id}, item.text)
 		))))
 	}
@@ -282,19 +283,26 @@ class CheckBoxForm extends Component {
 	}; */
 	constructor(props) {
 		super(props);
+		// if we want a prop to hold a default value, we need the following 2x lines. This is horrible. Really implies that the constructor
+		// code shouldn't rely on any props defaults. 
+		if (this.props==undefined) this.props = {};
+		if (this.props.label==undefined) this.props.label = 'default';
+		console.log('CheckboxForm constructor called: ' + this.props.label);
 		this.toggle = (e) => {
 			let checked = !this.state.checked;
 			console.log('CheckboxForm setting State: ' + this.props.label);
 			this.setState({ checked });
-			console.log('CheckboxForm has set State: ' + this.props.label);			
+			console.log('CheckboxForm has set State: ' + this.props.label);	
+			if (this.props.isToggled) this.props.isToggled(checked);
 		};
 	}
 	
-	render({label='My label text'}, { checked }) {
-		this.props.label = label;	// ensure the default value is always available, including the callbacks
+	render({label}, { checked }) {
+		// another hacky way of ensuring the default value is avail. Means default isn't set during construction tho.
+		//this.props.label = label;	// ensure the default value is always available, including the callbacks
 
 		console.log('CheckBoxForm render: ' + label);
-		console.log('trace: ' + stackTrace());
+		//console.log('trace: ' + stackTrace());
 		return h('div', null, 
 			h('label', null,
 				h('input', {type: 'checkbox', checked: checked, onClick: this.toggle}),
@@ -304,6 +312,31 @@ class CheckBoxForm extends Component {
 	}
 }
 
+class OptionalTextView extends Component {
+	// display some text only if checkbox is set
+	constructor(props) {
+		super(props);
+		this.state.isChecked = false;
+		
+		//this.isToggled = this.isToggled.bind(this);
+		this.isToggled = (value) => { this.setState( {isChecked: value} ) };
+		
+	}
+	
+	
+	isToggled(value) {	// this style of definition only works if  it's called via this.isToggled() - see arrow code below
+		this.setState( {isChecked: value} );
+	} 
+	
+	render() {
+		return h('div', null, 
+					h(CheckBoxForm, {label: 'Click to display text', isToggled: /* this.isToggled*/ (value) => this.isToggled(value) }),
+					this.state.isChecked ? h(CheckBoxForm, {label: 'Optionally hidden textbox'}) : {} //h('div', null, 'spacer to replace hidden textbox')
+				);
+	}
+}
+		
+
 class App extends Component {
 	render () {
 		console.log('App render');
@@ -312,7 +345,8 @@ class App extends Component {
 			h(CheckBoxForm, {label: 'explicit label'}),
 			h(Stars, {repo: 'developit/preact'}),
 			h(Clock, {title: 'The time is: '}),
-			h(Clock, {title: 'Dup time is: '}),			
+			h(Clock, {title: 'Dup time is: '}),
+			h(OptionalTextView),
 			h('div', null),
 			h(Incrementer),
 			h(Game),

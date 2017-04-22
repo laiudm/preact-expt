@@ -398,4 +398,4 @@
     };
     if ('undefined' != typeof module) module.exports = preact; else self.preact = preact;
 }();
-//# sourceMappingURL=preact.js.map
+//// # sourceMappingURL=preact.js.map
