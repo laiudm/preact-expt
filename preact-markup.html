@@ -34,7 +34,7 @@ console.error = (function(old) {
 <script>
 
 let {h, render, Component} = preact;
-const Markup = preactMarkup;
+// const Markup = preactMarkup;
 
 //Used http://codepen.io/ to convert from SCCS to CSS (took ages to find & fix this)
 
@@ -102,39 +102,7 @@ class App extends Component {
 	}
 }
 
-		
-		/*
-			<div id="app">
-				<div class="editor">
-					<div class="toolbar">
-						<button onClick={this.loadExample}>Load Example Gist</button>
-						<select value={type} onChange={this.linkState('type')}>
-							<option value="xml">XML (Strict)</option>
-							<option value="html">HTML5</option>
-						</select>
-						{ error ? (
-							<button onClick={this.showError}>Error</button>
-						) : null }
-					</div>
-
-					<textarea value={markup} onInput={this.linkState('markup')} />
-				</div>
-
-				<div class="preview">
-					<Markup
-						type={type}
-						markup={markup}
-						components={components}
-						onError={this.linkState('error', 'error')} />
-				</div>
-			</div>
-		);
-		
-		*/
-
-/* 
-
-*/
+// a couple of utility routines copy/pasted from using https://babeljs.io/repl/ to convert ES7
 
 function _objectWithoutProperties(obj, keys) { 
 	var target = {}; 
@@ -180,19 +148,8 @@ function createPlaceholderComponent (name) {
 
 }
 
-/*
-	<div class="placeholder-component" data-component={name} {...props}>
-		<h4>{ name }</h4>
-		<pre>{ JSON.stringify(props,null,'  ') }</pre>
-		<button onClick={ () => console.log(props) }>Log Props</button>
-		{ children.length ? (<div class="inner">{children}</div>) : null }
-	</div>
-*/
-
 const WidgetA = createPlaceholderComponent('WidgetA');
 const OtherWidget = createPlaceholderComponent('OtherWidget');
-
-
 
 // A <Toolbar /> component, to show that
 // Stateless Functional Components work too
@@ -201,10 +158,6 @@ function  Toolbar(_props) {
 	let props = _objectWithoutProperties( _props, ["children"]);
 	return h('header', _extends({className: "toolbar" }, props), children);
 }
-	
-	// <header class="toolbar" {...props}>{ children }</header>
-
-
 
 // A silly <Sidebar /> component
 class Sidebar extends Component {
@@ -223,14 +176,6 @@ class Sidebar extends Component {
 		);
 	}
 }
-				/*
-			<aside class="sidebar" {...props}>
-				<span>Mounts: {mounts}</span>
-				{ children }
-			</aside>
-				*/
-
-
 
 render(h(App, null), document.body);		
 
