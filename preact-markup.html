@@ -56,7 +56,8 @@ class App extends Component {
 
 	// loads HTML example from a Gist
 	loadExample() {
-		fetch('https://gist.githubusercontent.com/developit/2c6aa8e40bd3ab251968/raw/c470e7e82fcc3eaeea1e3bc26d0829b7592ebb06/example.html')
+		//fetch('https://gist.githubusercontent.com/developit/2c6aa8e40bd3ab251968/raw/c470e7e82fcc3eaeea1e3bc26d0829b7592ebb06/example.html')
+		fetch('example.html')
 			.then( r => r.text() )
 			.then( markup => this.setState({ type:'html', markup }) );
 	}
@@ -85,12 +86,12 @@ class App extends Component {
 				h('div', {className: "editor"},
 					// put toolbar here 
 					h('div', {className: "toolbar"}, 
-						h('button', {onClick: this.loadExample}, "Load Example Gist"),
+						h('button', {onClick: this.loadExample.bind(this)}, "Load Example Gist"),
 						h('select', {value: type, onChange: this.linkState('type')},
 							h('option', {value: "xml"}, "XML"),
 							h('option', {value: "html"}, "HTML5")
 						),
-						(error ? h('button', {onClick: this.showError}, "Error") : null)
+						(error ? h('button', {onClick: this.showError.bind(this)}, "Error") : null)
 					),
 					h('textarea', {value: markup, onInput: this.linkState('markup')})),
 				h('div', {className: 'preview'},

@@ -462,7 +462,7 @@ let exists = x => x;
 
 
 // https://github.com/developit/preact-markup/blob/master/src/markup-to-vdom.js
-//const EMPTY_OBJ = {};
+// already defined earlier const EMPTY_OBJ = {};
 
 /** Convert markup into a virtual DOM.
 *	@param {String} markup		HTML or XML markup (indicate via `type`)

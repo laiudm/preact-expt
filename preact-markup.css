@@ -36,7 +36,7 @@ aside.sidebar {
   display: block;
   float: right;
   width: 200px;
-  min-height: 100%;
+  min-height: 100px;
   background: #DDD;
   margin: 0 0 0 10px;
   padding: 10px;

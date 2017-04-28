@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>React Quick Prototyping</title>
+</head>
+<body>
+    <div id="root"></div>
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react.min.js"></script> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react-dom.min.js"></script> 
+    <!-- <script src="https://npmcdn.com/babel-transform-in-browser@6.4.6/dist/btib.min.js"></script> -->
+	<script src="https://unpkg.com/babel-standalone@6.24.0/babel.min.js"></script>
+    <script type="text/dave">
+		// example comes from ("text/es2015")
+		// https://www.npmjs.com/package/babel-transform-in-browser 
+		// can't work ot how to be able to view/put breakpoints, etc in the browser
+        // Your playground code goes here, e.g.: 
+		
+	class Clock extends React.Component {
+		constructor() {
+			super();
+			// set initial time:
+			this.state = {
+				time: Date.now(),
+			};
+			this.timer = setInterval(() => {
+				console.log("tick");
+				this.setState({ time: Date.now() });
+			}, 10000);		
+		}
+	 
+		render() {
+			//console.log("Error trace: " + (new Error()).stack);
+			let newtime = new Date(this.state.time).toLocaleTimeString();
+			return (
+				<div>{newtime}</div>
+			);
+		}
+	}
+        
+	function App ({ title }) {
+		console.log("Error trace: " + (new Error()).stack);
+		return (
+			<Clock/>
+		);
+	}
+
+	ReactDOM.render(
+		//<App title="Hello World" />,
+		  <Clock/>,
+		document.getElementById('root')
+	);
+    </script>
+	
+	<script>
+	
+	function getScript() {
+		scripts = 	document.scripts;
+		for (i = 0; i< scripts.length; i++) {
+			s = scripts[i];
+			if (s.type == "text/dave" ) {
+				return s.text;
+			}
+		}
+		return null;
+	}
+	
+	function transpile(inputScript) {
+		transformed = Babel.transform(inputScript, {presets: ["es2017", "react"], filename: "dunno", babelrc: false});
+		return transformed;
+	}
+	
+	s = getScript();
+	code = transpile(s).code;
+	// display it
+    //var para = document.createElement('p');
+	//var node = document.createTextNode(code);
+	//para.appendChild(node);
+	//document.body.appendChild(para);
+	
+	// http://stackoverflow.com/questions/3619484/can-i-add-javascript-dynamically-to-an-existing-script-element
+    var JS= document.createElement('script');
+    JS.text= code;
+    document.body.appendChild(JS);
+	
+	</script>
+	
+</body>
+</html>

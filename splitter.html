@@ -1,0 +1,203 @@
+<html>
+<head>
+<link rel="stylesheet" href="splitter-styles.css">
+<script type="text/javascript" src="preact.js"> </script>
+<script type="text/javascript" src="linkstate.js"> </script> 
+</head>
+<body>
+<div id="errors" style="
+  background: #c00;
+  color: #fff;
+  display: none;
+  margin: -20px -20px 20px;
+  padding: 20px;
+  white-space: pre-wrap;
+"></div>
+
+<script>
+window.onerror = function(message, source, line, col, error) {
+  var text = error ? error.stack || error : message + ' (at ' + source + ':' + line + ':' + col + ')';
+  errors.textContent += text + '\n';
+  errors.style.display = '';
+};
+console.error = (function(old) {
+  return function error() {
+    errors.textContent += Array.prototype.slice.call(arguments).join(' ') + '\n';
+    errors.style.display = '';
+    old.apply(this, arguments);
+  }
+})(console.error);
+
+// a couple of utility routines copy/pasted from using https://babeljs.io/repl/ to convert ES7
+
+function _objectWithoutProperties(obj, keys) { 
+	var target = {}; 
+	for (var i in obj) { 
+		if (keys.indexOf(i) >= 0) 
+			continue; 
+		if (!Object.prototype.hasOwnProperty.call(obj, i))
+			continue; 
+		target[i] = obj[i]; 
+	} 
+	return target; 
+}
+
+var _extends = Object.assign || function (target) { 
+	for (var i = 1; i < arguments.length; i++) { 
+		var source = arguments[i]; 
+		for (var key in source) { 
+			if (Object.prototype.hasOwnProperty.call(source, key)) { 
+				target[key] = source[key]; 
+			} 
+		} 
+	} 
+	return target; 
+}
+
+</script>
+
+
+<h1> A Splitter Panee </h1>
+<script>
+
+let {h, render, Component} = preact;
+
+class Pane extends Component {
+	/* constructor(props) {
+		super(props);
+		this.state = {
+			width: this.props.width,
+		};
+	}
+	*/
+
+	render({id, getWidth}) {
+		let style = this.props.style;
+		let children = this.props.children;
+		var widthString = "";
+		if (getWidth) {
+			let width = getWidth();
+			if (width) 
+				widthString = " width: " +width + "px;";
+		}
+		var s = this.props.style + widthString;
+		return h('div', {className: this.props.className, style: s, id:id}, children);
+	}
+}
+
+class Resizer extends Component {
+
+	render({onMouseDown, onMouseUp, onMouseMove, onMouseOut}) {
+		return h('span', {
+			className: "Resizer vertical", 
+			onMouseDown: event => { onMouseDown(event) },
+			//onMouseUp: event => { onMouseUp(event) },
+			//onMouseMove: event => { onMouseMove(event) },
+			//onMouseOut: event => { onMouseOut(event) },
+			foo: 'boo'});
+	}
+
+}
+
+//<div data-reactroot="" class="SplitPane  vertical " style="display: flex; flex: 1 1 0%; height: 100%; position: absolute; outline: none; overflow: hidden; user-select: text; flex-direction: row; left: 0px; right: 0px;"><div class="Pane vertical Pane1" style="flex: 0 0 auto; position: relative; outline: none; width: 253px;"><div></div></div><span class="Resizer vertical "></span><div class="Pane vertical Pane2" style="flex: 1 1 0%; position: relative; outline: none;"><div></div></div></div>
+
+class SplitPane extends Component {
+	constructor() {
+		super();
+		this.state = {
+			active: false,
+			width: null,
+		};
+		
+		this.onMouseDown = this.onMouseDown.bind(this);
+		this.onMouseUp = this.onMouseUp.bind(this);
+		this.onMouseMove = this.onMouseMove.bind(this);
+		this.onMouseOut = this.onMouseOut.bind(this);
+		this.getWidth = this.getWidth.bind(this);
+	}
+
+	onMouseDown(e) {
+		this.setState({active: true});
+		console.log("Splitpane: onmousedown");
+	}
+	
+	onMouseUp(e) {
+		this.setState({active: false});
+		console.log("Splitpane: onMouseUp");	
+	}
+
+	onMouseMove(e) {
+		// check some parameters
+		var buttons = e.buttons;	// non-zero if any button is held down
+		console.log("button: " + buttons);
+		
+		var p = document.getElementById("leftPane");
+		var bounds = p.getBoundingClientRect();
+		if (this.state.active && (buttons == 1) ) {
+			console.log("Splitpane: onMouseMove, mouse: (" + e.clientX + ", " + e.clientY + ")");	
+			console.log("Bounds - right: " + bounds.right + ", " + "width: " + bounds.width);
+			this.setState( {width: e.clientX});
+		};
+	}
+	
+	onMouseOut(e) {
+		//this.setState({active: false});
+		console.log("Splitpane: onMouseOut");	
+	}	
+	
+	getWidth() {
+		//getWidth called
+		return this.state.width;
+	}
+	
+    componentDidMount() {
+        //this.setSize(this.props, this.state);
+        document.addEventListener('mouseup', this.onMouseUp);
+        document.addEventListener('mousemove', this.onMouseMove);
+        document.addEventListener('touchmove', this.onTouchMove);
+    }	
+
+	render() {
+		let children = this.props.children;
+		return (
+			h('div', {
+				className: "SplitPane  vertical " , 
+				style: "display: flex; flex: 1 1 0%; height: 100%; position: absolute; outline: none; overflow: hidden; user-select: text; flex-direction: row; left: 0px; right: 0px;",
+				},
+				h(Pane, {
+					className: "Pane vertical Pane1",
+					id: "leftPane",
+					style: "flex: 0 0 auto; position: relative; outline: none; ",	//width: 358px;
+					getWidth: this.getWidth,
+					}, 
+					children[0]),
+				h(Resizer, {onMouseDown: this.onMouseDown, onMouseUp: this.onMouseUp, onMouseMove: this.onMouseMove, onMouseOut: this.onMouseOut}),
+				h(Pane, {className: "Pane vertical Pane2", style: "flex: 1 1 0%; position: relative; outline: none;" }, children[1])
+			)
+		);
+	}
+}
+
+class App extends Component {
+	constructor () {
+		super();
+		
+	}
+
+	render() {
+		return (
+			h(SplitPane, null, 
+				h('div', null, 'left div'),
+				h('div', null, 'right div')
+			)
+		);
+	}
+}
+
+
+render(h(App, null), document.body);		
+
+</script>
+
+</body>
+</html>
