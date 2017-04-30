@@ -57,31 +57,32 @@ var _extends = Object.assign || function (target) {
 </script>
 
 
-<h1> A Splitter Panee </h1>
+<h1> A Splitter Pane 2</h1>
 <script>
+
+// the following code is inspired by the module at https://github.com/tomkp/react-split-pane
 
 let {h, render, Component} = preact;
 
-class Pane extends Component {
-	/* constructor(props) {
-		super(props);
-		this.state = {
-			width: this.props.width,
-		};
-	}
-	*/
+function unFocus(document, window) {
+    if (document.selection) {
+        document.selection.empty();
+    } else {
+        try {
+            window.getSelection().removeAllRanges();
+            // eslint-disable-next-line no-empty
+        } catch (e) {}
+    }
+}
 
-	render({id, getWidth}) {
-		let style = this.props.style;
-		let children = this.props.children;
+class Pane extends Component {
+
+	render({setNode, getWidth, style, children}) {
 		var widthString = "";
-		if (getWidth) {
-			let width = getWidth();
-			if (width) 
-				widthString = " width: " +width + "px;";
-		}
+		let width;
+		if ( getWidth && (width = getWidth()) ) widthString = "width: " + width + "px; ";
 		var s = this.props.style + widthString;
-		return h('div', {className: this.props.className, style: s, id:id}, children);
+		return h('div', {className: this.props.className, style: s, ref: node => {if (setNode) setNode(node)}, }, children);
 	}
 }
 
@@ -91,10 +92,7 @@ class Resizer extends Component {
 		return h('span', {
 			className: "Resizer vertical", 
 			onMouseDown: event => { onMouseDown(event) },
-			//onMouseUp: event => { onMouseUp(event) },
-			//onMouseMove: event => { onMouseMove(event) },
-			//onMouseOut: event => { onMouseOut(event) },
-			foo: 'boo'});
+		});
 	}
 
 }
@@ -112,66 +110,60 @@ class SplitPane extends Component {
 		this.onMouseDown = this.onMouseDown.bind(this);
 		this.onMouseUp = this.onMouseUp.bind(this);
 		this.onMouseMove = this.onMouseMove.bind(this);
-		this.onMouseOut = this.onMouseOut.bind(this);
-		this.getWidth = this.getWidth.bind(this);
 	}
 
 	onMouseDown(e) {
-		this.setState({active: true});
-		console.log("Splitpane: onmousedown");
+		unFocus(document, window);
+		this.setState({
+			active: true,
+			mouseStart: e.clientX,	// track mouse position
+			paneWidthStart: this.leftPaneNode.getBoundingClientRect().width,
+		});
+		//console.log("Splitpane: onmousedown");
 	}
 	
 	onMouseUp(e) {
 		this.setState({active: false});
-		console.log("Splitpane: onMouseUp");	
+		//console.log("Splitpane: onMouseUp, " + e.clientX);	
 	}
 
 	onMouseMove(e) {
-		// check some parameters
-		var buttons = e.buttons;	// non-zero if any button is held down
-		console.log("button: " + buttons);
-		
-		var p = document.getElementById("leftPane");
-		var bounds = p.getBoundingClientRect();
-		if (this.state.active && (buttons == 1) ) {
-			console.log("Splitpane: onMouseMove, mouse: (" + e.clientX + ", " + e.clientY + ")");	
-			console.log("Bounds - right: " + bounds.right + ", " + "width: " + bounds.width);
-			this.setState( {width: e.clientX});
+		if (this.state.active && (e.buttons == 1) ) {	// left mouse button held donw
+			unFocus(document, window);
+			let mouseDelta = (this.state.mouseStart - e.clientX)
+			let newWidth = this.state.paneWidthStart - mouseDelta;
+			let maxWidth = this.splitPane.getBoundingClientRect().width - 40;
+			
+			if (newWidth < 20 /*min*/) newWidth = 20;
+			if (newWidth > maxWidth) newWidth = maxWidth;
+			
+			this.setState({
+				width: newWidth,
+			});
 		};
 	}
 	
-	onMouseOut(e) {
-		//this.setState({active: false});
-		console.log("Splitpane: onMouseOut");	
-	}	
-	
-	getWidth() {
-		//getWidth called
-		return this.state.width;
-	}
-	
     componentDidMount() {
-        //this.setSize(this.props, this.state);
         document.addEventListener('mouseup', this.onMouseUp);
         document.addEventListener('mousemove', this.onMouseMove);
-        document.addEventListener('touchmove', this.onTouchMove);
     }	
 
 	render() {
 		let children = this.props.children;
 		return (
 			h('div', {
+				ref: node => this.splitPane = node,
 				className: "SplitPane  vertical " , 
 				style: "display: flex; flex: 1 1 0%; height: 100%; position: absolute; outline: none; overflow: hidden; user-select: text; flex-direction: row; left: 0px; right: 0px;",
 				},
 				h(Pane, {
 					className: "Pane vertical Pane1",
-					id: "leftPane",
-					style: "flex: 0 0 auto; position: relative; outline: none; ",	//width: 358px;
-					getWidth: this.getWidth,
+					setNode: node => this.leftPaneNode = node, 
+					style: "flex: 0 0 auto; position: relative; outline: none; ",	//add within Pane: "width: 358px";
+					getWidth: ( () => this.state.width), 
 					}, 
 					children[0]),
-				h(Resizer, {onMouseDown: this.onMouseDown, onMouseUp: this.onMouseUp, onMouseMove: this.onMouseMove, onMouseOut: this.onMouseOut}),
+				h(Resizer, {onMouseDown: this.onMouseDown, }),
 				h(Pane, {className: "Pane vertical Pane2", style: "flex: 1 1 0%; position: relative; outline: none;" }, children[1])
 			)
 		);
@@ -179,21 +171,21 @@ class SplitPane extends Component {
 }
 
 class App extends Component {
-	constructor () {
-		super();
-		
-	}
 
 	render() {
 		return (
-			h(SplitPane, null, 
-				h('div', null, 'left div'),
-				h('div', null, 'right div')
+			h('div', {className: "parent"},
+				h('div', {className: "header"}, "Header"),
+				h('div', {className: "wrapper"},
+					h(SplitPane, null, 
+						h('div', null, 'left div'),
+						h('div', null, 'right div')
+					)
+				)
 			)
 		);
 	}
 }
-
 
 render(h(App, null), document.body);		
 

@@ -80,8 +80,10 @@
 	//document.body.appendChild(para);
 	
 	// http://stackoverflow.com/questions/3619484/can-i-add-javascript-dynamically-to-an-existing-script-element
+	// also in code for typsescript transpilation: https://github.com/basarat/typescript-script/blob/master/transpiler.js
     var JS= document.createElement('script');
-    JS.text= code;
+	JS.type = 'text/javascript';
+    JS.innerHTML= '//Compiled code\n\n' + code;
     document.body.appendChild(JS);
 	
 	</script>
