@@ -77,11 +77,8 @@ function unFocus(document, window) {
 
 class Pane extends Component {
 
-	render({setNode, getWidth, style, children}) {
-		var widthString = "";
-		let width;
-		if ( getWidth && (width = getWidth()) ) widthString = "width: " + width + "px; ";
-		var s = this.props.style + widthString;
+	render({setNode, newWidth, style, children}) {
+		var s = this.props.style + (newWidth !== undefined ) ? "width: " + newWidth + "px; " : "";
 		return h('div', {className: this.props.className, style: s, ref: node => {if (setNode) setNode(node)}, }, children);
 	}
 }
@@ -160,7 +157,7 @@ class SplitPane extends Component {
 					className: "Pane vertical Pane1",
 					setNode: node => this.leftPaneNode = node, 
 					style: "flex: 0 0 auto; position: relative; outline: none; ",	//add within Pane: "width: 358px";
-					getWidth: ( () => this.state.width), 
+					newWidth: this.state.width, 
 					}, 
 					children[0]),
 				h(Resizer, {onMouseDown: this.onMouseDown, }),

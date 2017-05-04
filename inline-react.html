@@ -83,7 +83,7 @@
 	// also in code for typsescript transpilation: https://github.com/basarat/typescript-script/blob/master/transpiler.js
     var JS= document.createElement('script');
 	JS.type = 'text/javascript';
-    JS.innerHTML= '//Compiled code\n\n' + code;
+    JS.innerHTML= '//Compiled code\n\n' + code + "//# sourceURL=transpiled.js\n\n";
     document.body.appendChild(JS);
 	
 	</script>

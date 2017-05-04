@@ -1,0 +1,210 @@
+<html>
+<head>
+<link rel="stylesheet" href="tir.css">
+<script type="text/javascript" src="preact.js"> </script>
+</head>
+<body>
+<div id="errors" style="
+  background: #c00;
+  color: #fff;
+  display: none;
+  margin: -20px -20px 20px;
+  padding: 20px;
+  white-space: pre-wrap;
+"></div>
+
+<script>
+window.onerror = function(message, source, line, col, error) {
+  var text = error ? error.stack || error : message + ' (at ' + source + ':' + line + ':' + col + ')';
+  errors.textContent += text + '\n';
+  errors.style.display = '';
+};
+console.error = (function(old) {
+  return function error() {
+    errors.textContent += Array.prototype.slice.call(arguments).join(' ') + '\n';
+    errors.style.display = '';
+    old.apply(this, arguments);
+  }
+})(console.error);
+
+// a couple of utility routines copy/pasted from using https://babeljs.io/repl/ to convert ES7
+
+function _objectWithoutProperties(obj, keys) { 
+	var target = {}; 
+	for (var i in obj) { 
+		if (keys.indexOf(i) >= 0) 
+			continue; 
+		if (!Object.prototype.hasOwnProperty.call(obj, i))
+			continue; 
+		target[i] = obj[i]; 
+	} 
+	return target; 
+}
+
+var _extends = Object.assign || function (target) { 
+	for (var i = 1; i < arguments.length; i++) { 
+		var source = arguments[i]; 
+		for (var key in source) { 
+			if (Object.prototype.hasOwnProperty.call(source, key)) { 
+				target[key] = source[key]; 
+			} 
+		} 
+	} 
+	return target; 
+}
+
+</script>
+
+
+<script>
+
+let {h, render, Component} = preact;
+
+// from https://facebook.github.io/react/docs/thinking-in-react.html
+
+ class ProductCategoryRow extends Component {
+  render() {
+    return (
+		h('tr', null,
+			h('th', {colSpan: "2"}, this.props.category)
+			//h('td', null, "sdf"),
+			//h('td', null, "dummy")
+		)
+	);
+	//	<tr><th colSpan="2">{this.props.category}</th></tr>;
+  }
+}
+
+class ProductRow extends Component {
+  render() {
+    var name = this.props.product.stocked ?
+      this.props.product.name :
+	  h('span', {style: {color: 'red'}}, this.props.product.name);
+    return (
+		h('tr', null,
+			h('td', null, name),
+			h('td', null, this.props.product.price)
+		)
+    );
+  }
+}
+
+class ProductTable extends Component {
+  render() {
+    var rows = [];
+    var lastCategory = null;
+    this.props.products.forEach((product) => {
+	  if (product.name.indexOf(this.props.filterText) === -1 
+		|| (!product.stocked && this.props.inStockOnly)) {
+			return;
+	  }
+	
+      if (product.category !== lastCategory) {
+		rows.push(h(ProductCategoryRow, {category: product.category, key: product.category}));
+      }
+	  rows.push(h(ProductRow, {product: product, key: product.name}));
+      lastCategory = product.category;
+    });
+    return (
+		h('table', null,
+			h('thead', null,
+				h('tr', null,
+					h('th', null, "Name"),
+					h('th', null, "Price")
+				),
+			),
+			h('tbody', null, rows)
+		)
+
+    );
+  }
+}
+
+class SearchBar extends Component {
+  /* constructor(props) {
+	super(props);
+	this.handleFilterTextInputChange = this.handleFilterTextInputChange.bind(this);
+	this.handleInStockInputChange = this.handleInStockInputChange.bind(this);
+  }
+  
+  handleFilterTextInputChange(e) {
+	this.props.onFilterTextInput(e.target.value);
+  }
+  
+  handleInStockInputChange(e) {
+    this.props.onInStockInput(e.target.checked);
+  }
+  */
+  
+  render() {
+    return (
+		h('form', null,
+			h('input', {type: "text", placeholder: "Search...", value: this.props.filterText,
+				//oninput: this.handleFilterTextInputChange}),
+				oninput: e => this.props.onFilterTextInput(e.target.value)}),
+			h('p', null,
+				h('input', {type: "checkbox", checked: this.props.inStockOnly,
+					//onChange: this.handleInStockInputChange}),
+					onChange: e => this.props.onInStockInput(e.target.checked)}),
+				" Only show products in stock"
+			)
+		)
+    );
+  }
+}
+
+class FilterableProductTable extends Component {
+  constructor() {
+	super();
+	this.state = {
+		filterText: "",
+		inStockOnly: false,
+	};
+	
+	//this.handleFilterTextInput = this.handleFilterTextInput.bind(this);
+	//this.handleInStockInput = this.handleInStockInput.bind(this);
+  }
+  
+  /*
+  handleFilterTextInput(filterText) {
+	this.setState({filterText: filterText});
+  }
+  
+  handleInStockInput(inStockOnly) {
+	this.setState({inStockOnly: inStockOnly});
+  } */
+  
+  render() {
+    return (
+		h('div', null,
+			h(SearchBar, {filterText: this.state.filterText, inStockOnly: this.state.inStockOnly,
+				//onFilterTextInput: this.handleFilterTextInput, 
+				onFilterTextInput: filterText => this.setState({filterText: filterText}),
+				//onInStockInput: this.handleInStockInput}),
+				onInStockInput: inStockOnly => this.setState({inStockOnly: inStockOnly})}),
+			h(ProductTable, {products: this.props.products, filterText: this.state.filterText, inStockOnly: this.state.inStockOnly})
+		)
+      /*<div>
+        <SearchBar />
+        <ProductTable products={this.props.products} />
+      </div>*/
+    );
+  }
+}
+
+
+var PRODUCTS = [
+  {category: 'Sporting Goods', price: '$49.99', stocked: true, name: 'Football'},
+  {category: 'Sporting Goods', price: '$9.99', stocked: true, name: 'Baseball'},
+  {category: 'Sporting Goods', price: '$29.99', stocked: false, name: 'Basketball'},
+  {category: 'Electronics', price: '$99.99', stocked: true, name: 'iPod Touch'},
+  {category: 'Electronics', price: '$399.99', stocked: false, name: 'iPhone 5'},
+  {category: 'Electronics', price: '$199.99', stocked: true, name: 'Nexus 7'}
+];
+
+render(h(FilterableProductTable, {products: PRODUCTS}), document.body);		
+
+</script>
+
+</body>
+</html>
